@@ -1,21 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, User, Send, Settings, RefreshCw, Code2, Cpu, BrainCircuit } from 'lucide-react';
+// Importação das bibliotecas de Markdown
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import ConfiguracaoPage from './Configuracao';
 
 export default function App() {
   // --- CONFIGURAÇÃO DA API ---
   const DOMINIOS_URL = 'http://localhost:8080/api/dominios';
   const COMANDOS_URL = 'http://localhost:8080/api/comandos';
 
-  // --- ESTADO DE TELA ---
-  const [tela, setTela] = useState('chat'); // 'chat' | 'configuracao'
-
   // --- ESTADOS DE DADOS ---
   const [modulos, setModulos] = useState([]);
   const [tipos, setTipos] = useState([]);
-  const [persona, setPersonas] = useState([]);
+  const [personas, setPersonas] = useState([]);
   const [niveis, setNiveis] = useState([]);
   const [apiConectada, setApiConectada] = useState(false);
 
@@ -28,14 +25,14 @@ export default function App() {
   });
 
   const [memo, setMemo] = useState(
-    "SELECT * FROM FAT_NOTA_FISCAL WHERE STATUS_NFE = 'REJEITADA' AND CHAVE_ACESSO IS NULL;"
+    'SELECT * FROM FAT_NOTA_FISCAL WHERE STATUS_NFE = \'REJEITADA\' AND CHAVE_ACESSO IS NULL;'
   );
-
-  const [isSynced, setIsSynced] = useState(true);
+  
+  const [isSynced, setIsSynced] = useState(true); 
   const [messages, setMessages] = useState([
     { role: 'assistant', content: 'Iniciando sistema... Por favor, aguarde a ligação ao banco de dados.' }
   ]);
-
+  
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -98,9 +95,9 @@ export default function App() {
     setIsLoading(true);
     try {
       await fetch(`${COMANDOS_URL}/1/reset`, { method: 'DELETE' });
-      setMessages([{
-        role: 'assistant',
-        content: '🚀 **Parâmetros Sincronizados.** O histórico foi limpo e o novo contexto SQL foi definido como prioridade.'
+      setMessages([{ 
+        role: 'assistant', 
+        content: '🚀 **Parâmetros Sincronizados.** O histórico foi limpo e o novo contexto SQL foi definido como prioridade.' 
       }]);
       setIsSynced(true);
     } catch (error) {
@@ -133,7 +130,7 @@ export default function App() {
           perguntaUsuario: userMsg
         })
       });
-
+      
       setMessages(prev => [...prev, { role: 'assistant', content: diagnostico.causaProvavel }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: `**Erro:** ${error.message}` }]);
@@ -142,12 +139,13 @@ export default function App() {
     }
   };
 
-  // --- RENDERIZAÇÃO DE MARKDOWN ---
+  // --- NOVA FUNÇÃO RENDERIZADORA COM REACT-MARKDOWN ---
   const renderMessageContent = (content) => {
     return (
-      <ReactMarkdown
+      <ReactMarkdown 
         remarkPlugins={[remarkGfm]}
         components={{
+          // Renderização customizada de blocos de código
           code({node, inline, className, children, ...props}) {
             const match = /language-(\w+)/.exec(className || '');
             return !inline ? (
@@ -168,6 +166,7 @@ export default function App() {
               </code>
             )
           },
+          // Estilização de tabelas Markdown
           table: ({children}) => (
             <div className="my-4 overflow-x-auto border border-slate-700 rounded-lg">
               <table className="w-full text-xs text-left border-collapse">{children}</table>
@@ -176,6 +175,7 @@ export default function App() {
           thead: ({children}) => <thead className="bg-slate-800 text-white">{children}</thead>,
           th: ({children}) => <th className="p-2 border border-slate-700 font-bold">{children}</th>,
           td: ({children}) => <td className="p-2 border border-slate-700">{children}</td>,
+          // Listas
           ul: ({children}) => <ul className="list-disc ml-5 mb-4 space-y-1">{children}</ul>,
           ol: ({children}) => <ol className="list-decimal ml-5 mb-4 space-y-1">{children}</ol>,
           p: ({children}) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
@@ -186,38 +186,18 @@ export default function App() {
     );
   };
 
-  // --- RENDERIZAÇÃO CONDICIONAL DE TELA ---
-  if (tela === 'configuracao') {
-    return (
-      <ConfiguracaoPage
-        onVoltar={() => {
-          setTela('chat');
-          fetchConfiguracoes(); 
-        }}
-      />
-    );
-  }
-
   return (
     <div className="flex h-screen w-full bg-slate-950 text-slate-300 font-sans overflow-hidden">
       <aside className="w-80 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 shadow-2xl">
-
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
             <div className="bg-cyan-600 p-2 rounded-lg text-white shadow-lg shadow-cyan-900/20">
               <BrainCircuit size={24} />
             </div>
-            <div className="flex-1">
+            <div>
               <h1 className="text-xl font-bold text-white tracking-tight">ExplicaAi</h1>
               <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Core Engine v2.0</p>
             </div>
-            <button
-              onClick={() => setTela('configuracao')}
-              title="Configurações"
-              className="p-2 rounded-lg text-slate-500 hover:text-cyan-400 hover:bg-slate-800 transition-colors"
-            >
-              <Settings size={16} />
-            </button>
           </div>
         </div>
 
@@ -247,7 +227,7 @@ export default function App() {
             <div className="space-y-1">
               <label className="text-xs text-slate-400">Persona da IA</label>
               <select name="personaId" value={config.personaId} onChange={handleConfigChange} className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-sm focus:border-cyan-500 outline-none">
-                {persona.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+                {personas.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
               </select>
             </div>
             <div className="space-y-1">
@@ -262,7 +242,7 @@ export default function App() {
             <h2 className="text-[10px] uppercase font-bold text-slate-500 flex items-center gap-2">
               <Code2 size={14} /> Script SQL (Memo)
             </h2>
-            <textarea
+            <textarea 
               value={memo}
               onChange={(e) => setMemo(e.target.value)}
               className="w-full h-40 bg-slate-950 border border-slate-800 rounded p-3 text-xs font-mono text-cyan-200/60 focus:border-cyan-500 resize-none outline-none"
@@ -271,12 +251,12 @@ export default function App() {
         </div>
 
         <div className="p-5 border-t border-slate-800 bg-slate-900/50">
-          <button
+          <button 
             onClick={handleSincronizarMotor}
             disabled={isLoading}
             className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg text-sm font-bold transition-all shadow-lg ${
-              isSynced
-              ? 'bg-slate-800 text-slate-500 cursor-default border border-slate-700'
+              isSynced 
+              ? 'bg-slate-800 text-slate-500 cursor-default border border-slate-700' 
               : 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20 animate-pulse'
             }`}
           >
@@ -304,8 +284,8 @@ export default function App() {
                 </div>
               )}
               <div className={`p-5 rounded-2xl text-sm shadow-xl ${
-                msg.role === 'user'
-                ? 'bg-cyan-700 text-white rounded-tr-none border border-cyan-600'
+                msg.role === 'user' 
+                ? 'bg-cyan-700 text-white rounded-tr-none border border-cyan-600' 
                 : 'bg-slate-900/80 text-slate-300 border border-slate-800 rounded-tl-none'
               }`} style={{ maxWidth: '85%' }}>
                 {renderMessageContent(msg.content)}
@@ -341,9 +321,9 @@ export default function App() {
                 className="w-full bg-transparent text-slate-200 p-4 resize-none h-14 outline-none placeholder-slate-600 text-sm disabled:opacity-40"
               />
             </div>
-            <button
-              type="submit"
-              disabled={!input.trim() || isLoading || !isSynced}
+            <button 
+              type="submit" 
+              disabled={!input.trim() || isLoading || !isSynced} 
               className="bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-800 text-white px-8 rounded-2xl transition-all shadow-lg active:scale-95 flex items-center justify-center"
             >
               <Send size={22} />
