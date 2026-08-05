@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2, Pencil, Check, X, RefreshCw, BrainCircuit, AlertCircle, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Pencil, Check, X, RefreshCw, BrainCircuit, AlertCircle, Maximize2, ShieldCheck, BookOpen } from 'lucide-react';
+import RevisaoPendentes from './RevisaoPendentes';
+import ConhecimentoManual from './ConhecimentoManual';
 
-const DOMINIOS_URL = 'http://localhost:8080/api/dominios';
+const DOMINIOS_URL = 'http://172.25.180.113:8080/api/dominios';
+const DOCUMENTACAO_PENDENTE_URL = 'http://172.25.180.113:8080/api/documentacao-pendente';
+const ABA_REVISAO = 'revisao-documentacao';
+const ABA_CONHECIMENTO = 'base-conhecimento';
 
 const DOMINIOS_CONFIG = [
   {
@@ -59,11 +64,11 @@ function Toast({ message, type, onClose }) {
   const colors = {
     success: 'border-emerald-600/40 text-emerald-400',
     error: 'border-red-600/40 text-red-400',
-    info: 'border-cyan-600/40 text-cyan-400',
+    info: 'border-indigo-600/40 text-indigo-400',
   };
 
   return (
-    <div className={`fixed bottom-6 right-6 z-50 bg-slate-900 border ${colors[type]} rounded-xl px-5 py-3 text-sm shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300`}>
+    <div className={`fixed bottom-6 right-6 z-50 bg-slate-900 border ${colors[type]} rounded-xl px-5 py-3 text-sm shadow-lg flex items-center gap-3 animate-in fade-in slide-in-from-bottom-4 duration-300`}>
       {type === 'error' && <AlertCircle size={15} />}
       {type === 'success' && <Check size={15} />}
       {message}
@@ -71,17 +76,17 @@ function Toast({ message, type, onClose }) {
   );
 }
 
-// NOVO: Componente Modal para edição de textos grandes
+// Modal para edição de textos grandes
 function EditorModal({ campo, valor, onSave, onClose }) {
   const [texto, setTexto] = useState(valor || '');
-  
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in">
       <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
           <div>
-            <h3 className="text-sm font-bold text-slate-200">Editor Expandido</h3>
-            <p className="text-xs text-cyan-500 font-mono mt-0.5">Campo: {campo.label}</p>
+            <h3 className="text-sm font-semibold text-slate-200">Editor expandido</h3>
+            <p className="text-xs text-indigo-400 mt-0.5">Campo: {campo.label}</p>
           </div>
           <button onClick={onClose} className="text-slate-500 hover:text-slate-300 transition-colors"><X size={18} /></button>
         </div>
@@ -90,14 +95,14 @@ function EditorModal({ campo, valor, onSave, onClose }) {
             autoFocus
             value={texto}
             onChange={e => setTexto(e.target.value)}
-            className="w-full h-72 bg-slate-950 border border-slate-700 focus:border-cyan-500 rounded-xl p-4 text-sm text-cyan-200 outline-none resize-none font-mono shadow-inner"
+            className="w-full h-72 bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-4 text-sm text-slate-200 outline-none resize-none font-mono"
             placeholder={campo.placeholder}
           />
         </div>
         <div className="px-6 py-4 border-t border-slate-800 bg-slate-800/30 flex justify-end gap-3">
            <button onClick={onClose} className="px-5 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors">Cancelar</button>
-           <button onClick={() => onSave(texto)} className="px-5 py-2 rounded-xl text-sm font-bold bg-cyan-600 hover:bg-cyan-500 text-white flex items-center gap-2 transition-transform active:scale-95 shadow-lg shadow-cyan-900/20">
-             <Check size={16}/> Salvar Texto
+           <button onClick={() => onSave(texto)} className="px-5 py-2 rounded-xl text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 transition-colors active:scale-95">
+             <Check size={16}/> Salvar texto
            </button>
         </div>
       </div>
@@ -135,7 +140,7 @@ function ItemRow({ item, campos, onSave, onDelete }) {
       )}
 
       <tr className="border-b border-slate-800/60 group hover:bg-slate-800/20 transition-colors">
-        <td className="px-4 py-2 text-xs text-slate-600 w-10 font-mono">{item.id}</td>
+        <td className="px-4 py-2 text-xs text-slate-600 w-10">{item.id}</td>
         {campos.map((campo) => (
           <td key={campo.key} className="px-4 py-2">
             {editing ? (
@@ -143,11 +148,11 @@ function ItemRow({ item, campos, onSave, onDelete }) {
                 <input
                   value={form[campo.key] || ''}
                   onChange={(e) => setForm((p) => ({ ...p, [campo.key]: e.target.value }))}
-                  className="w-full bg-slate-800 border border-slate-700 focus:border-cyan-500 rounded-lg pl-3 pr-8 py-1.5 text-sm text-slate-200 outline-none"
+                  className="w-full bg-slate-800 border border-slate-700 focus:border-indigo-500 rounded-lg pl-3 pr-8 py-1.5 text-sm text-slate-200 outline-none"
                 />
-                <button 
+                <button
                   onClick={() => setCampoMax(campo)}
-                  className="absolute right-1.5 p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-700 rounded-md opacity-0 group-hover/input:opacity-100 transition-all"
+                  className="absolute right-1.5 p-1 text-slate-500 hover:text-indigo-400 hover:bg-slate-700 rounded-md opacity-0 group-hover/input:opacity-100 transition-all"
                   title="Expandir editor"
                 >
                   <Maximize2 size={13} />
@@ -164,7 +169,7 @@ function ItemRow({ item, campos, onSave, onDelete }) {
           <div className="flex items-center gap-2 justify-end">
             {editing ? (
               <>
-                <button onClick={handleSave} disabled={saving} className="p-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400">
+                <button onClick={handleSave} disabled={saving} className="p-1.5 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/30 text-indigo-400">
                   {saving ? <RefreshCw size={13} className="animate-spin" /> : <Check size={13} />}
                 </button>
                 <button onClick={() => setEditing(false)} className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-500">
@@ -262,8 +267,8 @@ function DominioPainel({ dominio, onToast }) {
   };
 
   return (
-    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-xl relative">
-      
+    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden relative">
+
       {/* Modal para Novo Registro */}
       {campoMaxNew && (
         <EditorModal
@@ -284,9 +289,9 @@ function DominioPainel({ dominio, onToast }) {
         </div>
         <button
           onClick={() => { setAdicionando(true); setNovoForm({}); }}
-          className="flex items-center gap-2 px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-600/30 text-cyan-400 rounded-lg text-xs font-medium transition-all"
+          className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600/15 hover:bg-indigo-600/25 border border-indigo-600/30 text-indigo-400 rounded-lg text-xs font-medium transition-colors"
         >
-          <Plus size={13} /> Novo Registro
+          <Plus size={13} /> Novo registro
         </button>
       </div>
 
@@ -294,9 +299,9 @@ function DominioPainel({ dominio, onToast }) {
         <table className="w-full">
           <thead>
             <tr className="border-b border-slate-800 bg-slate-950/30">
-              <th className="text-left px-4 py-3 text-[10px] uppercase tracking-widest text-slate-500 font-bold w-10">ID</th>
+              <th className="text-left px-4 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium w-10">ID</th>
               {dominio.campos.map((c) => (
-                <th key={c.key} className="text-left px-4 py-3 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                <th key={c.key} className="text-left px-4 py-3 text-[11px] uppercase tracking-wide text-slate-500 font-medium">
                   {c.label}
                 </th>
               ))}
@@ -305,7 +310,7 @@ function DominioPainel({ dominio, onToast }) {
           </thead>
           <tbody>
             {adicionando && (
-              <tr className="border-b border-cyan-900/30 bg-cyan-950/10">
+              <tr className="border-b border-indigo-900/30 bg-indigo-950/10">
                 <td className="px-4 py-2 text-xs text-slate-600">—</td>
                 {dominio.campos.map((campo) => (
                   <td key={campo.key} className="px-4 py-2">
@@ -315,11 +320,11 @@ function DominioPainel({ dominio, onToast }) {
                         onChange={(e) => setNovoForm((p) => ({ ...p, [campo.key]: e.target.value }))}
                         placeholder={campo.placeholder}
                         autoFocus={campo.key === dominio.campos[0].key}
-                        className="w-full bg-slate-800 border border-cyan-600/50 focus:border-cyan-400 rounded-lg pl-3 pr-8 py-1.5 text-sm text-slate-200 outline-none"
+                        className="w-full bg-slate-800 border border-indigo-600/50 focus:border-indigo-400 rounded-lg pl-3 pr-8 py-1.5 text-sm text-slate-200 outline-none"
                       />
-                      <button 
+                      <button
                         onClick={() => setCampoMaxNew(campo)}
-                        className="absolute right-1.5 p-1 text-slate-500 hover:text-cyan-400 hover:bg-slate-700 rounded-md opacity-0 group-hover/input:opacity-100 transition-all"
+                        className="absolute right-1.5 p-1 text-slate-500 hover:text-indigo-400 hover:bg-slate-700 rounded-md opacity-0 group-hover/input:opacity-100 transition-all"
                         title="Expandir editor"
                       >
                         <Maximize2 size={13} />
@@ -329,7 +334,7 @@ function DominioPainel({ dominio, onToast }) {
                 ))}
                 <td className="px-4 py-2">
                   <div className="flex items-center gap-2 justify-end">
-                    <button onClick={handleCreate} disabled={salvandoNovo} className="p-1.5 rounded-lg bg-cyan-600/20 hover:bg-cyan-600/40 text-cyan-400">
+                    <button onClick={handleCreate} disabled={salvandoNovo} className="p-1.5 rounded-lg bg-indigo-600/15 hover:bg-indigo-600/30 text-indigo-400">
                       {salvandoNovo ? <RefreshCw size={13} className="animate-spin" /> : <Check size={13} />}
                     </button>
                     <button onClick={() => setAdicionando(false)} className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-500">
@@ -343,13 +348,13 @@ function DominioPainel({ dominio, onToast }) {
             {loading ? (
               <tr>
                 <td colSpan={dominio.campos.length + 2} className="px-4 py-12 text-center text-slate-500 text-sm">
-                  <RefreshCw size={20} className="animate-spin inline mr-3 text-cyan-600" /> Sincronizando com Backend...
+                  <RefreshCw size={20} className="animate-spin inline mr-3 text-indigo-500" /> Carregando dados...
                 </td>
               </tr>
             ) : itens.length === 0 && !adicionando ? (
               <tr>
                 <td colSpan={dominio.campos.length + 2} className="px-4 py-12 text-center text-slate-600 text-sm italic">
-                  Nenhum registro encontrado no banco de dados.
+                  Nenhum registro encontrado.
                 </td>
               </tr>
             ) : (
@@ -360,8 +365,8 @@ function DominioPainel({ dominio, onToast }) {
           </tbody>
         </table>
       </div>
-      <div className="px-6 py-3 border-t border-slate-800 text-[10px] text-slate-600 font-mono uppercase tracking-tighter">
-        Total: {itens.length} registro(s) mapeado(s)
+      <div className="px-6 py-3 border-t border-slate-800 text-xs text-slate-600">
+        {itens.length} registro{itens.length === 1 ? '' : 's'}
       </div>
     </div>
   );
@@ -371,50 +376,88 @@ function DominioPainel({ dominio, onToast }) {
 export default function ConfiguracaoPage({ onVoltar }) {
   const [abaSelecionada, setAbaSelecionada] = useState(DOMINIOS_CONFIG[0].key);
   const [toast, setToast] = useState(null);
+  const [pendentesCount, setPendentesCount] = useState(0);
 
   const showToast = (message, type = 'info') => setToast({ message, type });
   const dominioAtivo = DOMINIOS_CONFIG.find((d) => d.key === abaSelecionada);
+  const emRevisao = abaSelecionada === ABA_REVISAO;
+  const emConhecimento = abaSelecionada === ABA_CONHECIMENTO;
+
+  useEffect(() => {
+    fetch(`${DOCUMENTACAO_PENDENTE_URL}?status=PENDENTE`, { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((dados) => setPendentesCount(dados.length))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="flex h-screen w-full bg-slate-950 text-slate-300 font-sans overflow-hidden animate-in fade-in duration-500">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <aside className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+      <aside className="w-72 bg-slate-900/60 border-r border-slate-800 flex flex-col shrink-0">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-cyan-600 p-2 rounded-lg text-white shadow-lg shadow-cyan-900/20">
+            <div className="bg-indigo-600 p-2 rounded-lg text-white">
               <BrainCircuit size={22} />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-white tracking-tight">ExplicaAi</h1>
-              <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Painel Administrativo</p>
+              <h1 className="text-lg font-semibold text-white tracking-tight">ExplicaAi</h1>
+              <p className="text-xs text-slate-500">Painel administrativo</p>
             </div>
           </div>
-          <button onClick={onVoltar} className="flex items-center gap-2 text-xs text-slate-500 hover:text-cyan-400 transition-colors group">
-            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Voltar ao Terminal
+          <button onClick={onVoltar} className="flex items-center gap-2 text-xs text-slate-500 hover:text-indigo-400 transition-colors group">
+            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Voltar ao chat
           </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-          <p className="text-[10px] uppercase tracking-widest text-slate-600 font-bold px-3 mb-4">Entidades de Domínio</p>
+          <p className="text-[11px] uppercase tracking-wide text-slate-600 font-medium px-3 mb-4">Entidades de domínio</p>
           {DOMINIOS_CONFIG.map((d) => (
             <button
               key={d.key}
               onClick={() => setAbaSelecionada(d.key)}
-              className={`w-full text-left px-3 py-3 rounded-xl text-sm transition-all border ${
+              className={`w-full text-left px-3 py-2.5 rounded-xl text-sm transition-colors border ${
                 abaSelecionada === d.key
-                  ? 'bg-cyan-600/10 text-cyan-400 border-cyan-600/30 shadow-inner'
+                  ? 'bg-indigo-600/10 text-indigo-400 border-indigo-600/30'
                   : 'text-slate-500 border-transparent hover:bg-slate-800/50 hover:text-slate-300'
               }`}
             >
               {d.label}
             </button>
           ))}
+
+          <p className="text-[11px] uppercase tracking-wide text-slate-600 font-medium px-3 mb-4 mt-6">Fila de revisão</p>
+          <button
+            onClick={() => setAbaSelecionada(ABA_REVISAO)}
+            className={`w-full flex items-center justify-between gap-2 text-left px-3 py-2.5 rounded-xl text-sm transition-colors border ${
+              emRevisao
+                ? 'bg-indigo-600/10 text-indigo-400 border-indigo-600/30'
+                : 'text-slate-500 border-transparent hover:bg-slate-800/50 hover:text-slate-300'
+            }`}
+          >
+            <span className="flex items-center gap-2"><ShieldCheck size={14} /> Revisão de documentação</span>
+            {pendentesCount > 0 && (
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-medium bg-amber-600 text-white">
+                {pendentesCount}
+              </span>
+            )}
+          </button>
+
+          <p className="text-[11px] uppercase tracking-wide text-slate-600 font-medium px-3 mb-4 mt-6">Conhecimento</p>
+          <button
+            onClick={() => setAbaSelecionada(ABA_CONHECIMENTO)}
+            className={`w-full flex items-center gap-2 text-left px-3 py-2.5 rounded-xl text-sm transition-colors border ${
+              emConhecimento
+                ? 'bg-indigo-600/10 text-indigo-400 border-indigo-600/30'
+                : 'text-slate-500 border-transparent hover:bg-slate-800/50 hover:text-slate-300'
+            }`}
+          >
+            <BookOpen size={14} /> Base de conhecimento
+          </button>
         </nav>
         <div className="p-6 border-t border-slate-800">
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-700">
-            <span>ENGINE: V2.0</span>
-            <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div> DB READY</span>
+          <div className="flex items-center gap-2 text-xs text-slate-600">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div> Banco de dados pronto
           </div>
         </div>
       </aside>
@@ -422,14 +465,28 @@ export default function ConfiguracaoPage({ onVoltar }) {
       <main className="flex-1 flex flex-col overflow-hidden bg-slate-950">
         <div className="bg-slate-900/20 border-b border-slate-800 px-10 py-5 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="text-xl font-bold text-white">{dominioAtivo.label}</h2>
-            <p className="text-sm text-slate-500">{dominioAtivo.descricao}</p>
+            <h2 className="text-xl font-semibold text-white">
+              {emRevisao ? 'Revisão de documentação' : emConhecimento ? 'Base de conhecimento' : dominioAtivo.label}
+            </h2>
+            <p className="text-sm text-slate-500">
+              {emRevisao
+                ? 'Documentação Starbase (DBA/Infra) proposta pela IA em conversas, aguardando aprovação antes de ficar disponível na base de conhecimento.'
+                : emConhecimento
+                ? 'Documentos redigidos manualmente (manuais de processo, Q&A) indexados direto na base vetorial do ERP, sem depender da mineração da wiki.'
+                : dominioAtivo.descricao}
+            </p>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-10">
           <div className="max-w-5xl mx-auto">
-            <DominioPainel key={abaSelecionada} dominio={dominioAtivo} onToast={showToast} />
+            {emRevisao ? (
+              <RevisaoPendentes onToast={showToast} onCountChange={setPendentesCount} />
+            ) : emConhecimento ? (
+              <ConhecimentoManual onToast={showToast} />
+            ) : (
+              <DominioPainel key={abaSelecionada} dominio={dominioAtivo} onToast={showToast} />
+            )}
           </div>
         </div>
       </main>
