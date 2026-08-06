@@ -65,6 +65,7 @@ export default function App() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState(null);
+  const [feedbackEnviado, setFeedbackEnviado] = useState({}); // { [experienciaId]: boolean | 'enviando' }
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -205,6 +206,24 @@ export default function App() {
     }
   };
 
+  // Feedback empírico (ver docs/base-de-experiencias-estrategia.md) — confirmadoPor fica em
+  // branco de propósito, não há login no sistema; a experiência já registra o id, não precisa
+  // de mais fricção pro usuário confirmar se ajudou ou não.
+  const handleFeedbackExperiencia = async (experienciaId, funcionou) => {
+    setFeedbackEnviado(prev => ({ ...prev, [experienciaId]: 'enviando' }));
+    try {
+      await fetch(`${COMANDOS_URL.replace('/comandos', '/experiencias')}/${experienciaId}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmadoPor: '', funcionou })
+      });
+      setFeedbackEnviado(prev => ({ ...prev, [experienciaId]: funcionou ? 'ajudou' : 'nao-ajudou' }));
+    } catch (error) {
+      console.error("Erro ao registrar feedback:", error);
+      setFeedbackEnviado(prev => ({ ...prev, [experienciaId]: null }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input.trim() || isLoading || !isSynced) return;
@@ -230,7 +249,11 @@ export default function App() {
         })
       });
 
-      setMessages(prev => [...prev, { role: 'assistant', content: diagnostico.causaProvavel }]);
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: diagnostico.causaProvavel,
+        experienciasCitadas: diagnostico.experienciasCitadas || []
+      }]);
     } catch (error) {
       setMessages(prev => [...prev, { role: 'assistant', content: `**Erro:** ${error.message}` }]);
     } finally {
@@ -428,6 +451,36 @@ export default function App() {
                 }`}>
                   {renderMessageContent(msg.content)}
                 </div>
+                {msg.role === 'assistant' && msg.experienciasCitadas?.length > 0 && (() => {
+                  const experienciaId = msg.experienciasCitadas[0];
+                  const status = feedbackEnviado[experienciaId];
+                  if (status === 'ajudou' || status === 'nao-ajudou') {
+                    return (
+                      <p className="self-start px-2 py-1 text-xs text-slate-500">
+                        {status === 'ajudou' ? 'Valeu, obrigado pelo retorno!' : 'Obrigado — vamos rever esse relato.'}
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="self-start flex items-center gap-2 px-1">
+                      <span className="text-xs text-slate-600">Esse relato de experiência ajudou?</span>
+                      <button
+                        onClick={() => handleFeedbackExperiencia(experienciaId, true)}
+                        disabled={status === 'enviando'}
+                        className="px-2 py-1 rounded-md text-xs text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors disabled:opacity-50"
+                      >
+                        Isso me ajudou
+                      </button>
+                      <button
+                        onClick={() => handleFeedbackExperiencia(experienciaId, false)}
+                        disabled={status === 'enviando'}
+                        className="px-2 py-1 rounded-md text-xs text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors disabled:opacity-50"
+                      >
+                        Não se aplicou
+                      </button>
+                    </div>
+                  );
+                })()}
                 <button
                   onClick={() => handleCopiarMensagem(msg.content, index)}
                   title="Copiar mensagem"
