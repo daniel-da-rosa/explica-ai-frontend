@@ -300,8 +300,12 @@ export default function App() {
 
         <div className={`border-b border-slate-800 ${sidebarAberto ? 'p-6' : 'p-3'}`}>
           <div className={`flex items-center ${sidebarAberto ? 'gap-3' : 'flex-col gap-2'}`}>
-            <div className="shrink-0">
+            <div className="shrink-0 relative">
               <IconeExplicaAi size={38} />
+              <span
+                title={apiConectada ? 'Conectado ao servidor' : 'Sem conexão com o servidor'}
+                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-900 ${apiConectada ? 'bg-emerald-500' : 'bg-red-500'}`}
+              ></span>
             </div>
             {sidebarAberto && (
               <div className="flex-1 min-w-0">
@@ -408,14 +412,6 @@ export default function App() {
       </aside>
 
       <main className="flex-1 flex flex-col relative">
-        <div className="bg-slate-900/30 border-b border-slate-800 py-2.5 px-6 flex justify-between items-center text-xs">
-          <span className="flex items-center gap-2 text-slate-400">
-            <span className={`w-1.5 h-1.5 rounded-full ${apiConectada ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
-            {apiConectada ? 'Conectado ao servidor' : 'Sem conexão com o servidor'}
-          </span>
-          <span className="text-slate-600">Postgres · Neo4j</span>
-        </div>
-
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           {messages.map((msg, index) => (
             <div key={index} className={`group flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
