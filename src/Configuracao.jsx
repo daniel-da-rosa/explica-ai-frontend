@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2, Pencil, Check, X, RefreshCw, BrainCircuit, AlertCircle, Maximize2, ShieldCheck, BookOpen } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Pencil, Check, X, RefreshCw, AlertCircle, Maximize2, ShieldCheck, BookOpen } from 'lucide-react';
 import RevisaoPendentes from './RevisaoPendentes';
 import ConhecimentoManual from './ConhecimentoManual';
+import IconeExplicaAi from './IconeExplicaAi';
 
 const DOMINIOS_URL = 'http://172.25.180.113:8080/api/dominios';
 const DOCUMENTACAO_PENDENTE_URL = 'http://172.25.180.113:8080/api/documentacao-pendente';
@@ -397,11 +398,11 @@ export default function ConfiguracaoPage({ onVoltar }) {
       <aside className="w-72 bg-slate-900/60 border-r border-slate-800 flex flex-col shrink-0">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3 mb-6">
-            <div className="bg-indigo-600 p-2 rounded-lg text-white">
-              <BrainCircuit size={22} />
+            <div>
+              <IconeExplicaAi size={38} />
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-white tracking-tight">ExplicaAi</h1>
+              <h1 className="text-lg font-semibold text-white tracking-tight">Explica Aí</h1>
               <p className="text-xs text-slate-500">Painel administrativo</p>
             </div>
           </div>

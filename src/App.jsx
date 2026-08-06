@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, User, Send, Settings, RefreshCw, Code2, Cpu, BrainCircuit, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User, Send, Settings, RefreshCw, Code2, Cpu, ChevronDown, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import ConfiguracaoPage from './Configuracao';
+import IconeExplicaAi from './IconeExplicaAi';
 
 // Linha de configuração colapsável: fechada mostra só rótulo + valor selecionado (uma
 // linha compacta); aberta mostra o controle de verdade. Troca os selects sempre visíveis
@@ -63,7 +64,9 @@ export default function App() {
 
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState(null);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Qual campo de configuração está expandido no painel lateral — só um por vez
   // (accordion), pra manter o painel curto e nunca precisar de scroll.
@@ -140,6 +143,15 @@ export default function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  // Devolve o foco pra caixa de digitação assim que a resposta chega (isLoading volta a
+  // false) — sem isso o usuário precisa clicar de novo no campo pra continuar digitando,
+  // já que o textarea fica desabilitado (e perde o foco) enquanto isLoading é true.
+  useEffect(() => {
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
+
   // --- HANDLERS ---
   const handleConfigChange = (e) => {
     const { name, value } = e.target;
@@ -180,6 +192,16 @@ export default function App() {
       console.error("Erro ao sincronizar:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCopiarMensagem = async (conteudo, index) => {
+    try {
+      await navigator.clipboard.writeText(conteudo);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex((atual) => (atual === index ? null : atual)), 1500);
+    } catch (error) {
+      console.error("Erro ao copiar mensagem:", error);
     }
   };
 
@@ -278,13 +300,13 @@ export default function App() {
 
         <div className={`border-b border-slate-800 ${sidebarAberto ? 'p-6' : 'p-3'}`}>
           <div className={`flex items-center ${sidebarAberto ? 'gap-3' : 'flex-col gap-2'}`}>
-            <div className="bg-indigo-600 p-2 rounded-lg text-white shrink-0">
-              <BrainCircuit size={22} />
+            <div className="shrink-0">
+              <IconeExplicaAi size={38} />
             </div>
             {sidebarAberto && (
               <div className="flex-1 min-w-0">
-                <h1 className="text-lg font-semibold text-white tracking-tight">ExplicaAi</h1>
-                <p className="text-xs text-slate-500">Assistente de suporte técnico</p>
+                <h1 className="text-lg font-semibold text-white tracking-tight">Explica Aí</h1>
+                <p className="text-xs text-slate-500">Motor de Conhecimento Operacional</p>
               </div>
             )}
             <button
@@ -391,30 +413,39 @@ export default function App() {
             <span className={`w-1.5 h-1.5 rounded-full ${apiConectada ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
             {apiConectada ? 'Conectado ao servidor' : 'Sem conexão com o servidor'}
           </span>
-          <span className="text-slate-600">Postgres · Redis</span>
+          <span className="text-slate-600">Postgres · Neo4j</span>
         </div>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
           {messages.map((msg, index) => (
-            <div key={index} className={`flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div key={index} className={`group flex gap-4 max-w-4xl mx-auto ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {msg.role === 'assistant' && (
-                <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                  <Bot size={19} className="text-indigo-400" />
+                <div className="w-9 h-9 flex items-center justify-center shrink-0">
+                  <IconeExplicaAi size={28} />
                 </div>
               )}
-              <div className={`p-5 rounded-2xl text-sm ${
-                msg.role === 'user'
-                ? 'bg-indigo-600 text-white rounded-tr-none'
-                : 'bg-slate-900 text-slate-300 border border-slate-800 rounded-tl-none'
-              }`} style={{ maxWidth: '85%' }}>
-                {renderMessageContent(msg.content)}
+              <div className="flex flex-col gap-1" style={{ maxWidth: '85%' }}>
+                <div className={`p-5 rounded-2xl text-sm ${
+                  msg.role === 'user'
+                  ? 'bg-indigo-600 text-white rounded-tr-none'
+                  : 'bg-slate-900 text-slate-300 border border-slate-800 rounded-tl-none'
+                }`}>
+                  {renderMessageContent(msg.content)}
+                </div>
+                <button
+                  onClick={() => handleCopiarMensagem(msg.content, index)}
+                  title="Copiar mensagem"
+                  className={`flex items-center gap-1 ${msg.role === 'user' ? 'self-end' : 'self-start'} px-2 py-1 rounded-md text-xs text-slate-500 hover:text-slate-200 hover:bg-slate-800 opacity-0 group-hover:opacity-100 transition-opacity`}
+                >
+                  {copiedIndex === index ? <><Check size={12} /> Copiado</> : <><Copy size={12} /> Copiar</>}
+                </button>
               </div>
             </div>
           ))}
           {isLoading && (
             <div className="flex gap-4 max-w-4xl mx-auto items-center">
-              <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0">
-                <Bot size={19} className="text-slate-500" />
+              <div className="w-9 h-9 flex items-center justify-center shrink-0">
+                <IconeExplicaAi size={28} />
               </div>
               <div className="flex gap-1.5">
                 <div className="w-1.5 h-1.5 bg-slate-600 rounded-full animate-bounce"></div>
@@ -432,6 +463,7 @@ export default function App() {
               !isSynced ? 'border-amber-600/50' : 'border-slate-800 focus-within:border-indigo-500'
             }`}>
               <textarea
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handleSubmit(e))}
